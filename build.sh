@@ -22,11 +22,15 @@ cp Info.plist "$APP_BUNDLE/Contents/"
 # Create PkgInfo
 echo -n "APPL????" > "$APP_BUNDLE/Contents/PkgInfo"
 
+# Install to Applications
+pkill -f "Snippy.app" 2>/dev/null || true
+sleep 0.3
+rm -rf "/Applications/$APP_NAME.app"
+cp -r "$APP_BUNDLE" /Applications/
+
 echo ""
-echo "✓ Built: $APP_BUNDLE"
-echo ""
-echo "To install:  cp -r $APP_BUNDLE /Applications/"
-echo "To run:      open $APP_BUNDLE"
+echo "✓ Built and installed to /Applications/$APP_NAME.app"
+echo "  Run:  open /Applications/$APP_NAME.app"
 echo ""
 echo "Shortcuts:"
 echo "  ⌥+⌘+V     — Toggle Snippy popover"

@@ -6,12 +6,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ```bash
 swift build              # Debug build
-swift build -c release   # Release build
-bash build.sh            # Release build + .app bundle in .build/app/Snippy.app
-open .build/app/Snippy.app
+bash build.sh            # Release build + install to /Applications/Snippy.app
+open /Applications/Snippy.app
 ```
 
-Install: `cp -r .build/app/Snippy.app /Applications/`
+`build.sh` kills the running instance, builds release, creates the .app bundle, and copies it to /Applications.
 
 No external dependencies. Requires macOS 14+ and Xcode Command Line Tools.
 
