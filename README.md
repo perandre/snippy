@@ -23,7 +23,7 @@ Requires macOS 14+ and Xcode Command Line Tools.
 
 | Shortcut | Action |
 |----------|--------|
-| `Cmd+Shift+V` | Toggle Snippy from anywhere |
+| `Option+Cmd+V` | Toggle Snippy from anywhere |
 | `Cmd+V` | Paste clipboard as new snippet (text or image) |
 | `Cmd+N` | Add new snippet manually |
 | `Up/Down` | Navigate snippets |

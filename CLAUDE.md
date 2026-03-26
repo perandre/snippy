@@ -22,7 +22,7 @@ Pure SwiftUI + AppKit menu bar app. No dock icon (`LSUIElement: true`), no netwo
 **Entry flow:** `main.swift` → `NSApplication` with `.accessory` policy → `AppDelegate` creates:
 - **NSStatusItem** (menu bar icon)
 - **NSPanel** (floating window with SwiftUI `ContentView` via `NSHostingView`)
-- **Carbon global hotkey** (⌘+Shift+V via `RegisterEventHotKey`)
+- **Carbon global hotkey** (⌥⌘V via `RegisterEventHotKey`)
 - **NSEvent global monitor** (click-outside-to-dismiss)
 
 **Data:** `SnippetStore` (ObservableObject) persists to `~/Library/Application Support/Snippy/snippets.json` + `images/` dir. Sorted by `useCount` descending.

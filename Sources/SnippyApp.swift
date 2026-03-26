@@ -98,14 +98,14 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         statusItem.menu = nil
     }
 
-    // MARK: - Global Hotkey (⌘+Shift+V)
+    // MARK: - Global Hotkey (⌥+⌘+V)
 
     func registerGlobalHotKey() {
         var hotKeyID = EventHotKeyID()
         hotKeyID.signature = OSType(0x534E5059) // "SNPY"
         hotKeyID.id = 1
 
-        let modifiers: UInt32 = UInt32(cmdKey | shiftKey)
+        let modifiers: UInt32 = UInt32(cmdKey | optionKey)
         let keyCode: UInt32 = 9 // 'V' key
 
         var eventType = EventTypeSpec(
