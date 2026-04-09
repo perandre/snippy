@@ -8,6 +8,9 @@ class SnippetStore: ObservableObject {
 
     private let fileURL: URL
     private let imagesDir: URL
+    /// In-memory cache — keyed by imageFileName. NSCache evicts automatically
+    /// under memory pressure, so this never grows unboundedly.
+    private let imageCache = NSCache<NSString, NSImage>()
 
     init() {
         let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
@@ -70,6 +73,9 @@ class SnippetStore: ObservableObject {
 
         do {
             try pngData.write(to: fileURL)
+            // Prime the cache with the already-decoded image so the first
+            // render after adding doesn't hit disk.
+            imageCache.setObject(image, forKey: fileName as NSString)
             let snippet = Snippet(title: "", value: "[image]", imageFileName: fileName)
             snippets.insert(snippet, at: 0)
             save()
@@ -83,8 +89,17 @@ class SnippetStore: ObservableObject {
     }
 
     func loadImage(for snippet: Snippet) -> NSImage? {
-        guard let url = imageURL(for: snippet) else { return nil }
-        return NSImage(contentsOf: url)
+        guard let name = snippet.imageFileName else { return nil }
+        // Return cached copy if available.
+        if let cached = imageCache.object(forKey: name as NSString) {
+            return cached
+        }
+        // Fall back to disk and populate the cache.
+        let url = imagesDir.appendingPathComponent(name)
+        guard FileManager.default.fileExists(atPath: url.path),
+              let image = NSImage(contentsOf: url) else { return nil }
+        imageCache.setObject(image, forKey: name as NSString)
+        return image
     }
 
     func update(_ snippet: Snippet) {
@@ -95,10 +110,11 @@ class SnippetStore: ObservableObject {
     }
 
     func delete(_ snippet: Snippet) {
-        // Clean up image file
+        // Clean up image file and cache entry.
         if let name = snippet.imageFileName {
             let url = imagesDir.appendingPathComponent(name)
             try? FileManager.default.removeItem(at: url)
+            imageCache.removeObject(forKey: name as NSString)
         }
         snippets.removeAll { $0.id == snippet.id }
         save()
