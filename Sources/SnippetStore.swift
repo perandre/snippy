@@ -21,6 +21,10 @@ class SnippetStore: ObservableObject {
             [.posixPermissions: 0o700],
             ofItemAtPath: snippyDir.path
         )
+        try? FileManager.default.setAttributes(
+            [.posixPermissions: 0o700],
+            ofItemAtPath: imagesDir.path
+        )
 
         load()
     }
@@ -69,7 +73,11 @@ class SnippetStore: ObservableObject {
         let fileURL = imagesDir.appendingPathComponent(fileName)
 
         do {
-            try pngData.write(to: fileURL)
+            try pngData.write(to: fileURL, options: [.atomic, .completeFileProtection])
+            try? FileManager.default.setAttributes(
+                [.posixPermissions: 0o600],
+                ofItemAtPath: fileURL.path
+            )
             let snippet = Snippet(title: "", value: "[image]", imageFileName: fileName)
             snippets.insert(snippet, at: 0)
             save()
