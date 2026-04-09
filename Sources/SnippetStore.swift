@@ -113,13 +113,17 @@ class SnippetStore: ObservableObject {
     }
 
     func filtered(by query: String) -> [Snippet] {
-        let sorted = snippets.sorted { $0.useCount > $1.useCount }
-        guard !query.isEmpty else { return sorted }
+        // When there is no search query, honour the stored order so that
+        // manual drag-reordering (via move(from:to:)) is visible to the user.
+        // When filtering, sort by useCount so the most-used matches rise first.
+        guard !query.isEmpty else { return snippets }
         let q = query.lowercased()
-        return sorted.filter {
-            $0.title.lowercased().contains(q) ||
-            $0.value.lowercased().contains(q)
-        }
+        return snippets
+            .filter {
+                $0.title.lowercased().contains(q) ||
+                $0.value.lowercased().contains(q)
+            }
+            .sorted { $0.useCount > $1.useCount }
     }
 
     func move(from source: IndexSet, to destination: Int) {
