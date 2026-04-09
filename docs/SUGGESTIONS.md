@@ -115,3 +115,41 @@ Improvement ideas surfaced during code review. Capped at 3 per night; ordered by
 **Files involved:**
 - `Sources/SnippyApp.swift` — in `hidePanel()`, save `panel.frame.origin` to `UserDefaults`; in `showPanel()`, read the saved origin and skip the auto-centre calculation if one is present
 - `Sources/SnippyApp.swift` — add a "Reset panel position" item to the right-click context menu so users can recover if they drag the panel off-screen
+
+---
+
+## 10. Auto-paste mode: copy + paste in one keystroke
+
+**Why:** After selecting a snippet with Return (or a click), the text lands in the clipboard but the user still has to switch back to the target app and press ⌘V. For the common "pick snippet → paste immediately" workflow this is an unnecessary extra step. A modifier variant — e.g., holding ⌥ while pressing Return, or a dedicated ⌥Return binding — could copy the snippet, dismiss the panel, re-activate the previously focused app, and synthesise a ⌘V keystroke via `CGEvent`, completing the paste in one action. This would make Snippy feel as fast as a true text-expander for the most common use case.
+
+**Effort:** M
+
+**Files involved:**
+- `Sources/ContentView.swift` — detect the ⌥Return chord in the key monitor; extract a `copyAndPaste(_:)` variant of the existing `copySnippet()` that additionally calls the paste helper
+- `Sources/SnippyApp.swift` — add a `pasteToFrontmostApp()` helper that records the previously active app before `showPanel()` (store in `AppDelegate`), then re-activates it and posts a `CGEvent` ⌘V key pair after a short delay
+
+---
+
+## 11. Drag-to-reorder snippets in the list
+
+**Why:** `SnippetStore` already implements `move(fromOffsets:toOffset:)` — the full reorder logic is in place — but no drag-and-drop UI is wired to it. When a user wants to manually curate their top snippets (e.g., keep a rarely used but important entry visible), the only lever today is indirect: copying a snippet increments its `useCount` and eventually floats it up. Exposing `.onMove` on the `LazyVStack` (or switching to a `List` for drag support) would let users directly control the order with zero extra storage cost.
+
+**Effort:** S
+
+**Files involved:**
+- `Sources/ContentView.swift` — replace `LazyVStack` + `ForEach` with a `List` that has `.onMove { store.move(from:to:) }`, or add a drag handle + `onDrag`/`onDrop` pair to `SnippetRow` while keeping `LazyVStack`
+- `Sources/SnippetStore.swift` — `move(fromOffsets:toOffset:)` already exists; ensure `filtered(by:)` preserves insertion-order when a manual order has been set (may need a separate `pinnedOrder: [UUID]` array when query is empty)
+
+---
+
+## 12. Clipboard-history auto-capture
+
+**Why:** Snippy currently only adds clipboard content when the user explicitly presses ⌘V inside the panel. Users who copy things throughout the day and later wish they had saved them get no benefit. Polling `NSPasteboard.changeCount` on a short timer (e.g., every 2 seconds while the app is running) and silently appending new unique text entries to the snippet list would turn Snippy into a passive clipboard history without any extra user action. A configurable cap (e.g., keep last 50 auto-captured entries) and a visual distinction (e.g., a clock badge on auto-captured rows) would keep the list from growing unbounded.
+
+**Effort:** M
+
+**Files involved:**
+- `Sources/SnippetStore.swift` — add an `autoCapture(from pasteboard: NSPasteboard)` method that checks `changeCount`, deduplicates by value, and inserts new entries tagged with a `source: .autoCapture` marker
+- `Sources/SnippyApp.swift` — install a `Timer.scheduledTimer` in `applicationDidFinishLaunching` that calls `store.autoCapture(from: .general)` periodically; expose a `UserDefaults`-backed toggle so users can disable auto-capture
+- `Sources/Snippet.swift` — add an optional `source: SnippetSource` enum (`manual` / `autoCapture`) used to style the row badge and enforce the cap
+- `Sources/SnippetRow.swift` — show a small clock icon on auto-captured rows so users can distinguish them at a glance
