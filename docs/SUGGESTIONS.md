@@ -78,3 +78,40 @@ Improvement ideas surfaced during code review. Capped at 3 per night; ordered by
 - `Sources/SnippetStore.swift` — add a sync layer that mirrors saves to/from iCloud storage; handle merge conflicts (last-write-wins by `lastUsedAt` is probably sufficient)
 - `Info.plist` — add `NSUbiquitousContainers` or CloudKit entitlement keys
 - `Package.swift` / `build.sh` — may require a signed app identity and the iCloud capability in Xcode
+
+---
+
+## 7. Last-used date and usage heat indicator on each row
+
+**Why:** Every snippet already tracks `lastUsedAt` and `useCount`, but neither field is visible in the UI. A user who wants to audit their snippet library — to prune stale entries or understand which snippets they actually rely on — has no way to see this data. Showing a subtle "last used X days ago" tooltip on hover, or a small colour-coded heat bar (cold blue → warm orange based on recency), would surface the already-collected data at zero storage cost and help users decide what to keep, edit, or delete.
+
+**Effort:** S
+
+**Files involved:**
+- `Sources/SnippetRow.swift` — add a tooltip modifier on the content area showing `lastUsedAt` formatted as a relative date; optionally add a 3–4 px accent bar on the left edge coloured by recency
+- `Sources/Snippet.swift` — no schema changes needed; `lastUsedAt` and `useCount` are already persisted
+
+---
+
+## 8. Quick-cycle mode: copy the next snippet without opening the panel
+
+**Why:** A user who repeatedly pastes the same two or three snippets in sequence (e.g., toggling between a work email address and a personal one) must open the Snippy panel, navigate, copy, dismiss, paste, and repeat. A secondary hotkey (e.g., `⌥⌘→`) that copies the next snippet in the sorted list without opening the panel would let power users cycle through their top snippets in a single keystroke. The snippet index could wrap around so the shortcut always works.
+
+**Effort:** M
+
+**Files involved:**
+- `Sources/SnippyApp.swift` — register a second `EventHotKeyID` for the cycle-forward shortcut; call a new `copyNextSnippet()` action on `AppDelegate`
+- `Sources/SnippetStore.swift` — add a `cycleIndex: Int` state variable that advances on each call to `copyNextSnippet()` and resets when the panel is opened normally
+- `Sources/SnippyApp.swift` — post a brief `NSUserNotification`-style banner (or use `NSAlert` in sheet mode) so the user sees what was just copied without having to open the panel
+
+---
+
+## 9. Configurable panel position (remember last position or snap to screen edge)
+
+**Why:** Snippy always opens centred horizontally near the top of the screen. Users who work with their most-used app in the top-left corner (e.g., a code editor with narrow sidebar) find the panel overlaps their cursor position. Letting users drag the panel to a preferred location and persisting that position to `UserDefaults` would remove the friction of repositioning on every invoke. A secondary option — "snap to status bar icon" — would make the panel behave like a standard menu bar popover for users who prefer that style.
+
+**Effort:** S
+
+**Files involved:**
+- `Sources/SnippyApp.swift` — in `hidePanel()`, save `panel.frame.origin` to `UserDefaults`; in `showPanel()`, read the saved origin and skip the auto-centre calculation if one is present
+- `Sources/SnippyApp.swift` — add a "Reset panel position" item to the right-click context menu so users can recover if they drag the panel off-screen
