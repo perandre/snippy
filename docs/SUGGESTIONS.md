@@ -153,3 +153,38 @@ Improvement ideas surfaced during code review. Capped at 3 per night; ordered by
 - `Sources/SnippyApp.swift` — install a `Timer.scheduledTimer` in `applicationDidFinishLaunching` that calls `store.autoCapture(from: .general)` periodically; expose a `UserDefaults`-backed toggle so users can disable auto-capture
 - `Sources/Snippet.swift` — add an optional `source: SnippetSource` enum (`manual` / `autoCapture`) used to style the row badge and enforce the cap
 - `Sources/SnippetRow.swift` — show a small clock icon on auto-captured rows so users can distinguish them at a glance
+
+---
+
+## 13. Surface save errors instead of swallowing them silently
+
+**Rationale:** `SnippetStore.save()` catches all errors with an empty `catch {}` block, meaning a disk-full condition, a permissions error on `snippets.json`, or an encoding failure will cause data loss with no feedback to the user. Because Snippy has no test target either, this path is never exercised. The fix is two-pronged: log the error at minimum, and post a brief `NSUserNotification`-style alert (or update a `@Published var lastSaveError: Error?` that `ContentView` watches) so users are not left wondering why new snippets disappear after a restart.
+
+**Effort:** S
+
+**Involved files:**
+- `Sources/SnippetStore.swift` — replace the empty `catch {}` in `save()` with a `catch { self.lastSaveError = error }` and publish the error state
+- `Sources/ContentView.swift` — observe `store.lastSaveError` and display a transient banner or sheet when it is non-nil
+
+---
+
+## 14. Orphaned image files are never cleaned up
+
+**Rationale:** Image snippets write PNG files to `~/Library/Application Support/Snippy/images/` using `UUID().uuidString` filenames. The `delete(_:)` method removes the matching file when a snippet is deleted normally, but there is no defensive sweep: if the app crashes between writing the PNG and saving `snippets.json`, or if the JSON is manually edited, PNG files accumulate with no reference pointing to them. Over time a heavy image user could accumulate hundreds of MB of orphaned files. A startup reconciliation pass — comparing the `images/` directory to `snippet.imageFileName` values and deleting unmatched PNGs — would keep disk usage honest.
+
+**Effort:** S
+
+**Involved files:**
+- `Sources/SnippetStore.swift` — add a `pruneOrphanedImages()` method called from `load()` after decoding; iterate `imagesDir` contents and `removeItem` any filename not referenced by a current snippet's `imageFileName`
+
+---
+
+## 15. Search field does not reliably regain focus when the panel reappears
+
+**Rationale:** When Snippy's panel is hidden and re-shown, `ContentView` resets its state via the `snippyDidShow` notification, but `FocusState` (the standard SwiftUI mechanism used in `AddSnippetRow` and `EditSnippetRow`) does not work reliably in `NSPanel` floating windows — the same limitation that already forced all keyboard handling onto `NSEvent` local monitors. As a result, the search `TextField` may not be focused on re-open, so typing immediately after invoking the hotkey produces no output in the search bar. An explicit `NSApp.keyWindow?.makeFirstResponder(hostingView)` call or a targeted `NSTextField.becomeFirstResponder()` triggered by `snippyDidShow` would fix this consistently.
+
+**Effort:** S
+
+**Involved files:**
+- `Sources/SnippyApp.swift` — after posting `snippyDidShow`, call `panel.makeFirstResponder(panel.contentView)` (or the specific hosting view) to push focus into the SwiftUI tree
+- `Sources/ContentView.swift` — if a programmatic approach is insufficient, install a one-shot `NSEvent` monitor on `snippyDidShow` that synthesises a Tab key event to cycle focus into the search field
