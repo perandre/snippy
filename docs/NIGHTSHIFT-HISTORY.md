@@ -5,6 +5,8 @@ bundle run. See https://github.com/perandre/night-shift for what each bundle doe
 
 ## Runs
 
+- 2026-04-12 code-fixes —  silent  no test target; add-tests self-skipped
+- 2026-04-12 docs       —  ok      2 ADRs (PR #4), 3 suggestions (PR #5), weekly digest (PR #6); changelog and user-guide silent
 - 2026-04-09 suggest-improvements  —  ok      3 suggestions added (silent save error, orphaned image cleanup, search field focus)
 - 2026-04-09 translate-ui          —  silent  no i18n setup found; exited without changes
 - 2026-04-09 suggest-improvements  —  ok      3 suggestions added (auto-paste mode, drag-to-reorder, clipboard-history auto-capture)
