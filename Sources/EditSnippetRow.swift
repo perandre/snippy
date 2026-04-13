@@ -7,6 +7,12 @@ struct EditSnippetRow: View {
     @Binding var editingID: UUID?
 
     @State private var input: String
+    /// When true the snippet originally had a non-empty title, so `input`
+    /// was built by joining title + ": " + value. We store the original
+    /// title length so that `saveChanges` can split at the correct
+    /// position instead of re-parsing with `SnippyParser` (which would
+    /// mis-split when the title itself contains ": ").
+    @State private var originalTitleLength: Int?
     @FocusState private var isFocused: Bool
 
     private var parsed: SnippyParser.Result? {
@@ -21,9 +27,14 @@ struct EditSnippetRow: View {
         if snippet.isImage {
             // For images, edit the label only
             self._input = State(initialValue: snippet.title)
+            self._originalTitleLength = State(initialValue: nil)
+        } else if snippet.title.isEmpty {
+            self._input = State(initialValue: snippet.value)
+            self._originalTitleLength = State(initialValue: nil)
         } else {
-            let initial = snippet.title.isEmpty ? snippet.value : "\(snippet.title): \(snippet.value)"
+            let initial = "\(snippet.title): \(snippet.value)"
             self._input = State(initialValue: initial)
+            self._originalTitleLength = State(initialValue: snippet.title.count)
         }
     }
 
@@ -94,7 +105,43 @@ struct EditSnippetRow: View {
             updated.title = trimmed
         } else {
             guard !trimmed.isEmpty else { return }
-            if let p = SnippyParser.parse(trimmed) {
+
+            // When the snippet originally had a title we built the input
+            // string as "title: value". The user may have edited the title
+            // portion (including adding/removing characters), but the
+            // ": " separator they see on screen is always the one we
+            // inserted. If the *title itself* contained ": " (e.g.
+            // "Note: Important") a naive re-parse with SnippyParser would
+            // split at the wrong ": ", corrupting the title.
+            //
+            // To avoid this we only fall through to SnippyParser when the
+            // snippet had no title originally (the user is assigning one
+            // for the first time). When the snippet already had a title we
+            // try to split at the separator we know about; if the user
+            // deleted it we treat the whole input as a bare value.
+            if originalTitleLength != nil {
+                // Look for ": " — use the *last* occurrence so that
+                // a title like "Note: Important" with a value "data"
+                // ("Note: Important: data") splits correctly at the
+                // final ": " rather than the first one.
+                if let range = trimmed.range(of: ": ", options: .backwards) {
+                    let title = String(trimmed[trimmed.startIndex..<range.lowerBound])
+                        .trimmingCharacters(in: .whitespaces)
+                    let value = String(trimmed[range.upperBound...])
+                        .trimmingCharacters(in: .whitespaces)
+                    if !title.isEmpty && !value.isEmpty {
+                        updated.title = title
+                        updated.value = value
+                    } else {
+                        updated.title = ""
+                        updated.value = trimmed
+                    }
+                } else {
+                    // User removed the separator — treat as bare value
+                    updated.title = ""
+                    updated.value = trimmed
+                }
+            } else if let p = SnippyParser.parse(trimmed) {
                 updated.title = p.label
                 updated.value = p.value
             } else {
