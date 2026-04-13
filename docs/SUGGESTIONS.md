@@ -188,3 +188,39 @@ Improvement ideas surfaced during code review. Capped at 3 per night; ordered by
 **Involved files:**
 - `Sources/SnippyApp.swift` — after posting `snippyDidShow`, call `panel.makeFirstResponder(panel.contentView)` (or the specific hosting view) to push focus into the SwiftUI tree
 - `Sources/ContentView.swift` — if a programmatic approach is insufficient, install a one-shot `NSEvent` monitor on `snippyDidShow` that synthesises a Tab key event to cycle focus into the search field
+
+---
+
+## 16. Multi-line snippet support with expandable preview
+
+**Why:** All snippet values are displayed with `lineLimit(1)` in `SnippetRow`, so multi-line content — postal addresses, code blocks, email templates, multi-step instructions — is truncated to a single line with no way to preview the rest. The user must copy the snippet and paste it elsewhere to see the full text. Adding a disclosure chevron or click-to-expand behaviour on the row (toggling `lineLimit` between 1 and nil) would let users verify multi-line content before copying. The data model already supports multi-line strings; only the display is constrained.
+
+**Effort:** S
+
+**Files involved:**
+- `Sources/SnippetRow.swift` — add an `@State var isExpanded: Bool` toggle; swap `lineLimit(1)` for `lineLimit(isExpanded ? nil : 1)` on the value `Text`; add a small chevron indicator when the value contains `\n`
+- `Sources/ContentView.swift` — no changes needed; `ScrollView` + `LazyVStack` already handles variable-height rows
+
+---
+
+## 17. Image paste deduplication
+
+**Why:** When a user pastes text via `⌘V`, `pasteAsNewSnippet()` checks whether an identical value already exists and skips the insert if so. No such check exists for images — pasting the same screenshot twice creates two separate entries with two separate PNG files on disk. For users who frequently paste screenshots, this leads to a cluttered list and wasted disk space. Comparing the raw PNG data bytes (or a hash) of the incoming image against existing image files before inserting would close this gap.
+
+**Effort:** S
+
+**Files involved:**
+- `Sources/SnippetStore.swift` — in `addImage(_:)`, after generating `pngData`, compute a hash (e.g., `SHA256` via `CryptoKit` or a simple `Data.hashValue`) and compare against existing files in `imagesDir`; skip the insert if a byte-identical file is found
+- `Sources/ContentView.swift` — no changes; `pasteAsNewSnippet()` already delegates to `store.addImage()`
+
+---
+
+## 18. Launch at login option
+
+**Why:** Snippy is a background utility designed to be always available via `⌥⌘V`. After a restart or login, users must manually open Snippy from Applications or the Dock — there is no "Start at login" toggle. macOS provides `SMAppService.mainApp.register()` (macOS 13+) for login items without a helper app, which is a single API call. Adding a toggle in the right-click context menu ("Start at Login") that calls `SMAppService` would ensure Snippy is always running without the user having to remember to launch it.
+
+**Effort:** S
+
+**Files involved:**
+- `Sources/SnippyApp.swift` — in `showContextMenu()`, add a "Start at Login" menu item with a checkmark state; call `SMAppService.mainApp.register()` / `.unregister()` on toggle; read current status from `SMAppService.mainApp.status`
+- `Info.plist` — no changes needed; `SMAppService` does not require additional plist keys for the main app target
