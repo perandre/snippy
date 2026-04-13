@@ -5,6 +5,8 @@ bundle run. See https://github.com/perandre/night-shift for what each bundle doe
 
 ## Runs
 
+- 2026-04-13 code-fixes —  silent  no test target and no Swift toolchain; add-tests self-skipped
+- 2026-04-13 docs       —  ok      2 ADRs (NSEvent monitors, ZStack overlay), 3 suggestions, weekly digest; 3 PRs opened
 - 2026-04-12 code-fixes —  silent  no test target; add-tests self-skipped
 - 2026-04-12 docs       —  ok      2 ADRs (PR #4), 3 suggestions (PR #5), weekly digest (PR #6); changelog and user-guide silent
 - 2026-04-09 suggest-improvements  —  ok      3 suggestions added (silent save error, orphaned image cleanup, search field focus)
