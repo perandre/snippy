@@ -5,6 +5,7 @@ bundle run. See https://github.com/perandre/night-shift for what each bundle doe
 
 ## Runs
 
+- 2026-04-13 audits     —  ok      1; fix edit-title-colon-corruption bug PR #11
 - 2026-04-13 code-fixes —  silent  no test target and no Swift toolchain; add-tests self-skipped
 - 2026-04-13 docs       —  ok      2 ADRs (NSEvent monitors, ZStack overlay), 3 suggestions, weekly digest; 3 PRs opened
 - 2026-04-12 code-fixes —  silent  no test target; add-tests self-skipped
