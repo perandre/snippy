@@ -19,6 +19,11 @@ cp "$(swift build -c release --show-bin-path)/$APP_NAME" "$APP_BUNDLE/Contents/M
 # Copy Info.plist
 cp Info.plist "$APP_BUNDLE/Contents/"
 
+# Copy app icon
+if [ -f Resources/AppIcon.icns ]; then
+    cp Resources/AppIcon.icns "$APP_BUNDLE/Contents/Resources/"
+fi
+
 # Create PkgInfo
 echo -n "APPL????" > "$APP_BUNDLE/Contents/PkgInfo"
 
