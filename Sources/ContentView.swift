@@ -47,6 +47,12 @@ struct ContentView: View {
 
     /// NSEvent local monitor — works reliably in NSPanel windows
     private func installKeyMonitor() {
+        // Defensive: SwiftUI can fire onAppear more than once per view lifetime.
+        // Always tear down the previous monitor first to avoid stacked handlers.
+        if let m = keyMonitor {
+            NSEvent.removeMonitor(m)
+            keyMonitor = nil
+        }
         keyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
             // Don't intercept when add/edit row is active (they have their own monitor)
             if isAdding || editingID != nil {
@@ -80,9 +86,9 @@ struct ContentView: View {
             case 45 where cmd: // ⌘N — new snippet
                 startAdding()
                 return nil
-            case 12 where cmd: // ⌘Q — quit
-                NSApp.terminate(nil)
-                return nil
+            // ⌘Q intentionally NOT handled here — accidental presses while
+            // typing were causing the app to quit unexpectedly. Quit via
+            // right-click on the status bar icon instead.
             default:
                 return event
             }
@@ -203,7 +209,7 @@ struct ContentView: View {
             HStack(spacing: 10) {
                 Text("↑↓ select")
                 Text("↵ copy")
-                Text("⌘Q quit")
+                Text("esc close")
             }
             .font(.system(size: 10, design: .monospaced))
             .foregroundStyle(.quaternary)

@@ -10,17 +10,22 @@ struct OnReturnKey: ViewModifier {
     func body(content: Content) -> some View {
         content
             .onAppear {
+                if let m = monitor {
+                    NSEvent.removeMonitor(m)
+                    monitor = nil
+                }
                 monitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
                     if event.keyCode == 36 { // Return key
                         action()
-                        return nil // consume the event
+                        return nil
                     }
                     return event
                 }
             }
             .onDisappear {
-                if let monitor = monitor {
-                    NSEvent.removeMonitor(monitor)
+                if let m = monitor {
+                    NSEvent.removeMonitor(m)
+                    monitor = nil
                 }
             }
     }

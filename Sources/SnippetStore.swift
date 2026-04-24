@@ -8,6 +8,7 @@ class SnippetStore: ObservableObject {
 
     private let fileURL: URL
     private let imagesDir: URL
+    private var imageCache: [String: NSImage] = [:]
 
     init() {
         let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
@@ -83,8 +84,12 @@ class SnippetStore: ObservableObject {
     }
 
     func loadImage(for snippet: Snippet) -> NSImage? {
-        guard let url = imageURL(for: snippet) else { return nil }
-        return NSImage(contentsOf: url)
+        guard let name = snippet.imageFileName else { return nil }
+        if let cached = imageCache[name] { return cached }
+        guard let url = imageURL(for: snippet),
+              let img = NSImage(contentsOf: url) else { return nil }
+        imageCache[name] = img
+        return img
     }
 
     func update(_ snippet: Snippet) {
@@ -95,10 +100,10 @@ class SnippetStore: ObservableObject {
     }
 
     func delete(_ snippet: Snippet) {
-        // Clean up image file
         if let name = snippet.imageFileName {
             let url = imagesDir.appendingPathComponent(name)
             try? FileManager.default.removeItem(at: url)
+            imageCache.removeValue(forKey: name)
         }
         snippets.removeAll { $0.id == snippet.id }
         save()

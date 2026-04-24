@@ -17,14 +17,23 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         setupPanel()
         registerGlobalHotKey()
 
-        // Close panel when clicking outside
-        eventMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) { [weak self] _ in
-            self?.hidePanel()
-        }
-
         // Show on first launch
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
             self?.showPanel()
+        }
+    }
+
+    private func startClickAwayMonitor() {
+        guard eventMonitor == nil else { return }
+        eventMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) { [weak self] _ in
+            self?.hidePanel()
+        }
+    }
+
+    private func stopClickAwayMonitor() {
+        if let m = eventMonitor {
+            NSEvent.removeMonitor(m)
+            eventMonitor = nil
         }
     }
 
@@ -156,11 +165,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         panel.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
         NotificationCenter.default.post(name: .snippyDidShow, object: nil)
+        startClickAwayMonitor()
     }
 
     func hidePanel() {
         guard panel.isVisible else { return }
         panel.orderOut(nil)
+        stopClickAwayMonitor()
     }
 
     @objc func quitApp() {

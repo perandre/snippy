@@ -2,6 +2,10 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Workflow
+
+After any code change: commit and push to `origin/main` without waiting for confirmation. Use a concise conventional-style message describing the change.
+
 ## Build & Run
 
 ```bash
