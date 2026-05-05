@@ -98,6 +98,12 @@ You can add a searchable label to an image by editing it (pencil icon).
 
 ---
 
+## Quitting Snippy
+
+Right-click the Snippy icon in the menu bar and choose **"Quit Snippy"**. There is no in-app keyboard shortcut for quitting — this prevents accidental termination while typing in the snippet panel.
+
+---
+
 ## Keyboard reference
 
 | Key | Action |
@@ -108,7 +114,6 @@ You can add a searchable label to an image by editing it (pencil icon).
 | `⌘V` | Paste clipboard as new snippet |
 | `⌘N` | Start adding a new snippet manually |
 | `Esc` | Dismiss panel (or cancel add / edit) |
-| `⌘Q` | Quit Snippy |
 
 ---
 
