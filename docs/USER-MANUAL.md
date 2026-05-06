@@ -108,7 +108,8 @@ You can add a searchable label to an image by editing it (pencil icon).
 | `⌘V` | Paste clipboard as new snippet |
 | `⌘N` | Start adding a new snippet manually |
 | `Esc` | Dismiss panel (or cancel add / edit) |
-| `⌘Q` | Quit Snippy |
+
+> **Quitting Snippy:** Right-click the menu bar icon and choose "Quit Snippy". The `⌘Q` shortcut is intentionally disabled in the snippet panel to prevent accidental exits while typing.
 
 ---
 
