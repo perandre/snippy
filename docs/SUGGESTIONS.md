@@ -188,3 +188,39 @@ Improvement ideas surfaced during code review. Capped at 3 per night; ordered by
 **Involved files:**
 - `Sources/SnippyApp.swift` — after posting `snippyDidShow`, call `panel.makeFirstResponder(panel.contentView)` (or the specific hosting view) to push focus into the SwiftUI tree
 - `Sources/ContentView.swift` — if a programmatic approach is insufficient, install a one-shot `NSEvent` monitor on `snippyDidShow` that synthesises a Tab key event to cycle focus into the search field
+
+---
+
+## 16. Multi-line snippet preview
+
+**Why:** Every snippet row uses `lineLimit(1)`, so multi-line text (code blocks, mailing addresses, email templates) is truncated to a single line with no visual cue that more content exists. A user scanning the list cannot distinguish a one-line snippet from a twenty-line one, making it harder to pick the right entry without copying first. Showing 2–3 lines by default — or a small "3 more lines" badge — would give enough context to identify the snippet at a glance while keeping the list compact.
+
+**Effort:** S
+
+**Files involved:**
+- `Sources/SnippetRow.swift` — change `.lineLimit(1)` to `.lineLimit(3)` on the value `Text`, or add a conditional expansion (e.g., show 1 line normally, 3 on hover)
+- `Sources/ContentView.swift` — no changes needed unless row height adjustments affect scroll behaviour
+
+---
+
+## 17. Snippet count in the footer
+
+**Why:** The footer currently shows "New Snippet" on the left and keyboard hints on the right, but there is no indication of how many snippets are stored or how many match the current search. A small count label (e.g., "12 snippets" or "3 of 12") next to the button would give users a sense of library size and search narrowing without taking up meaningful space.
+
+**Effort:** S
+
+**Files involved:**
+- `Sources/ContentView.swift` — add a `Text("\(filteredSnippets.count) of \(store.snippets.count)")` (or just the total when not searching) between the "New Snippet" button and the keyboard hints in the `footer` view
+
+---
+
+## 18. Duplicate snippet from context menu
+
+**Why:** Users who want to create a variant of an existing snippet — for example, a slightly different email template or the same address with a new label — must manually add a new snippet and re-type or re-paste the content. A "Duplicate" option in the right-click context menu (and optionally on hover alongside the pencil and trash icons) would clone the snippet, open it in edit mode, and let the user modify only what differs. This is especially useful for image snippets, where the user would otherwise need to re-copy the original image from the clipboard.
+
+**Effort:** S
+
+**Files involved:**
+- `Sources/SnippetStore.swift` — add a `duplicate(_ snippet: Snippet) -> Snippet` method that creates a copy with a new `id`, resets `useCount` to 0, and (for images) copies the PNG file to a new UUID filename
+- `Sources/SnippetRow.swift` — add a "Duplicate" item to the `.contextMenu` block
+- `Sources/ContentView.swift` — wire the duplicate action callback and optionally enter edit mode on the new snippet
