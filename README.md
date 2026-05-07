@@ -14,8 +14,9 @@ Or build from source:
 git clone https://github.com/perandre/snippy.git
 cd snippy
 bash build.sh
-cp -r .build/app/Snippy.app /Applications/
 ```
+
+`build.sh` builds a release binary and installs it to `/Applications/Snippy.app` automatically.
 
 Requires macOS 14+ and Xcode Command Line Tools.
 
@@ -29,7 +30,8 @@ Requires macOS 14+ and Xcode Command Line Tools.
 | `Up/Down` | Navigate snippets |
 | `Enter` | Copy selected to clipboard |
 | `Esc` | Dismiss window |
-| `Cmd+Q` | Quit |
+
+To quit Snippy, right-click the menu bar icon and choose Quit.
 
 ### Adding snippets
 
