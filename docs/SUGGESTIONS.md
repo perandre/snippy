@@ -188,3 +188,37 @@ Improvement ideas surfaced during code review. Capped at 3 per night; ordered by
 **Involved files:**
 - `Sources/SnippyApp.swift` — after posting `snippyDidShow`, call `panel.makeFirstResponder(panel.contentView)` (or the specific hosting view) to push focus into the SwiftUI tree
 - `Sources/ContentView.swift` — if a programmatic approach is insufficient, install a one-shot `NSEvent` monitor on `snippyDidShow` that synthesises a Tab key event to cycle focus into the search field
+
+---
+
+## 16. Multi-line snippet preview in the list
+
+**Why:** Snippets are displayed with `lineLimit(1)` in `SnippetRow`, so any multi-line text (code blocks, addresses, email templates) is truncated to the first line. Two snippets that share the same first line — e.g. two SQL queries starting with `SELECT * FROM` — become indistinguishable in the list. Expanding text rows to show 2–3 lines by default, or offering a "peek" expansion on selection, would let users identify the right snippet without copying first. Image snippets already get a multi-line preview via the thumbnail; text snippets deserve parity.
+
+**Effort:** S
+
+**Files involved:**
+- `Sources/SnippetRow.swift` — change `lineLimit(1)` to `lineLimit(3)` on the value `Text` view; optionally use `lineLimit(isSelected ? 5 : 2)` to expand the selected row
+- `Sources/ContentView.swift` — no changes needed if the `LazyVStack` already handles variable-height rows (it does)
+
+---
+
+## 17. Keyboard shortcut to delete the selected snippet
+
+**Why:** Snippy is designed as a keyboard-first app — arrow keys to navigate, Enter to copy, Esc to dismiss — but deleting a snippet requires switching to the mouse to hover and click the trash icon (or right-click for the context menu). Power users who are curating their list have to break out of keyboard flow for every deletion. Adding a `⌘+Delete` (or `⌘+Backspace`) binding in the existing `ContentView` key monitor would complete the keyboard-first story. This is distinct from the undo/confirmation suggestion (#2): it addresses the missing binding, not the safety net after pressing it.
+
+**Effort:** S
+
+**Files involved:**
+- `Sources/ContentView.swift` — add a `case 51 where cmd:` (Backspace key code) branch in the `installKeyMonitor` switch that calls `store.delete(selectedSnippet)` and advances the selection to the next row
+
+---
+
+## 18. Full-text tooltip on hover for truncated snippets
+
+**Why:** With `lineLimit(1)` (or even a small expansion to 2–3 lines), long text snippets are still truncated. Users cannot tell exactly what a snippet contains until they copy it and paste it elsewhere. A native `.help()` tooltip (or a custom popover triggered by a brief hover delay) showing the complete untruncated text would let users verify content in-place. This is particularly useful for snippets that look identical after truncation — e.g. two long URLs that share a domain prefix. Unlike suggestion #7 (usage metadata tooltip), this surfaces the snippet's content, not its statistics.
+
+**Effort:** S
+
+**Files involved:**
+- `Sources/SnippetRow.swift` — add `.help(snippet.value)` modifier on the value `Text` view; for a richer experience, use `.popover(isPresented:)` triggered by a `onHover` delay to show a scrollable, selectable `Text` view with the full content
