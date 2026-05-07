@@ -2,7 +2,16 @@
 
 All notable user-facing changes to Snippy are documented here.
 
-## [Unreleased]
+## [1.1.0] — 2026-04-24
+
+### Added
+- App icon visible in Finder, app switcher, and right-click menus.
+
+### Changed
+- Removed in-app `⌘Q` shortcut to prevent accidental quit while typing; use right-click on the menu bar icon to quit instead.
+
+### Fixed
+- NSEvent monitor leaks in keyboard handlers that could degrade responsiveness over long sessions.
 
 ## [1.0.1] — 2026-03-26
 
