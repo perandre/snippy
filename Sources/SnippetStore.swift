@@ -118,7 +118,12 @@ class SnippetStore: ObservableObject {
     }
 
     func filtered(by query: String) -> [Snippet] {
-        let sorted = snippets.sorted { $0.useCount > $1.useCount }
+        let sorted = snippets.sorted { a, b in
+            if a.useCount != b.useCount { return a.useCount > b.useCount }
+            let aDate = a.lastUsedAt ?? a.createdAt
+            let bDate = b.lastUsedAt ?? b.createdAt
+            return aDate > bDate
+        }
         guard !query.isEmpty else { return sorted }
         let q = query.lowercased()
         return sorted.filter {
