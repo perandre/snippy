@@ -188,3 +188,43 @@ Improvement ideas surfaced during code review. Capped at 3 per night; ordered by
 **Involved files:**
 - `Sources/SnippyApp.swift` — after posting `snippyDidShow`, call `panel.makeFirstResponder(panel.contentView)` (or the specific hosting view) to push focus into the SwiftUI tree
 - `Sources/ContentView.swift` — if a programmatic approach is insufficient, install a one-shot `NSEvent` monitor on `snippyDidShow` that synthesises a Tab key event to cycle focus into the search field
+
+---
+
+## 16. VoiceOver and assistive-technology support
+
+**Why:** Snippy's entire keyboard interface is built on `NSEvent.addLocalMonitorForEvents`, which intercepts raw key events before they reach the accessibility layer. VoiceOver users cannot navigate the snippet list, hear snippet labels, or trigger copy/edit/delete actions — the app is effectively invisible to assistive technology. Adding `.accessibilityLabel`, `.accessibilityHint`, and `.accessibilityAction` modifiers to `SnippetRow`, the search bar, and the footer buttons would expose the full UI to VoiceOver. The `ContentView` key monitor should also pass events through when VoiceOver is active (`NSWorkspace.shared.isVoiceOverEnabled`) so VO's own navigation commands are not swallowed.
+
+**Effort:** M
+
+**Files involved:**
+- `Sources/SnippetRow.swift` — add `.accessibilityLabel()` combining the title and a truncated value; add `.accessibilityAction(named: "Copy")`, `"Edit"`, `"Delete"` so VO users can invoke actions without hover buttons
+- `Sources/ContentView.swift` — in `installKeyMonitor()`, check `NSWorkspace.shared.isVoiceOverEnabled` and return `event` (pass-through) for arrow/Return keys when VO is on, letting VO handle navigation natively
+- `Sources/AddSnippetRow.swift`, `Sources/EditSnippetRow.swift` — add `.accessibilityLabel` on the input field describing its purpose
+
+---
+
+## 17. Snippet templates with fill-in placeholders
+
+**Why:** Users who store repeated patterns — email replies, code boilerplate, bug-report outlines — must copy the snippet and then manually find-and-replace variable parts every time. Supporting a lightweight placeholder syntax (e.g. `{{name}}`, `{{date}}`) that, on copy, presents a small prompt for each placeholder before placing the filled-in result on the clipboard would turn Snippy from a static clipboard into a lightweight text-expander. The prompt could reuse the existing `NSPanel` infrastructure: show an inline row per placeholder, let the user tab through and press Return to confirm.
+
+**Effort:** M
+
+**Files involved:**
+- `Sources/Snippet.swift` — add a computed `placeholders: [String]` that scans `value` for `{{…}}` tokens
+- `Sources/ContentView.swift` — when `copySnippet()` detects placeholders, show a fill-in overlay instead of copying immediately; on confirm, substitute values and copy the expanded string
+- `Sources/SnippetRow.swift` — show a small template badge (e.g. `⟨⟩` icon) on rows whose value contains placeholders, so users can distinguish static snippets from templates at a glance
+
+---
+
+## 18. Sensitive-value masking for passwords and tokens
+
+**Why:** Users who store API keys, one-time passwords, or login credentials as snippets have those values displayed in plaintext in the snippet list — visible to anyone glancing at the screen. A per-snippet "sensitive" toggle that replaces the displayed value with `••••••••` until the user hovers or clicks would add a basic privacy layer without changing how copy works. The flag would persist in `snippets.json` and survive restarts, giving users a low-effort way to keep credentials out of casual sight while still benefiting from Snippy's quick-copy workflow.
+
+**Effort:** S
+
+**Files involved:**
+- `Sources/Snippet.swift` — add `isSensitive: Bool` property (default `false`) with backwards-compatible decoding
+- `Sources/SnippetRow.swift` — when `snippet.isSensitive && !isHovered`, display `String(repeating: "•", count: 8)` instead of `snippet.value`
+- `Sources/EditSnippetRow.swift` — add a toggle or context-menu item to flip `isSensitive`
+- `Sources/SnippetStore.swift` — encode/decode the new field
