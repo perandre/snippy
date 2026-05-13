@@ -156,6 +156,41 @@ Improvement ideas surfaced during code review. Capped at 3 per night; ordered by
 
 ---
 
+## 16. Launch at login toggle
+
+**Why:** Snippy is a menu bar utility that users expect to be always available, but there is no option to start it automatically on login. After every reboot the user must remember to open Snippy manually — or add it to System Settings > Login Items by hand, which is buried and non-obvious. A "Launch at Login" toggle in the right-click context menu, backed by `SMAppService` (macOS 13+), would let users opt in with a single click. Menu bar apps without this feature feel incomplete compared to peers like Rectangle, Bartender, or Alfred.
+
+**Effort:** S
+
+**Files involved:**
+- `Sources/SnippyApp.swift` — add a checkmark menu item "Launch at Login" in `showContextMenu()` that reads `SMAppService.mainApp.status` and toggles `register()` / `unregister()` on click
+- `Package.swift` — add `import ServiceManagement` (framework is part of macOS SDK, no external dependency)
+
+---
+
+## 17. Keyboard shortcut to delete the selected snippet
+
+**Why:** Snippy's design is keyboard-first — arrow keys to navigate, Return to copy, Esc to dismiss — but deleting a snippet requires reaching for the mouse (hover to reveal the trash icon, or right-click for the context menu). A `⌘⌫` (Command + Delete) binding that removes the currently highlighted snippet would close this gap and let a user manage their list without leaving the keyboard. Combined with the undo suggestion (#2), accidental deletes would be recoverable.
+
+**Effort:** S
+
+**Files involved:**
+- `Sources/ContentView.swift` — add a `case 51 where cmd:` branch (keyCode 51 = Delete/Backspace) to the `NSEvent` key monitor that calls `store.delete(selectedSnippet)` and advances the selection to the next row
+
+---
+
+## 18. Multi-line snippet preview with expand/collapse
+
+**Why:** Every snippet row is capped at `.lineLimit(1)`, so multi-line content (code blocks, email templates, multi-line addresses) is truncated to a single line with no way to preview the full text without editing. A user who stores a 5-line code snippet sees only the first line and must rely on the label (if they set one) to know what it contains. Expanding on click or via a disclosure chevron — while keeping the default view compact — would make multi-line snippets usable without cluttering the list for single-line users.
+
+**Effort:** M
+
+**Files involved:**
+- `Sources/SnippetRow.swift` — replace the fixed `.lineLimit(1)` with a conditional based on an `@State var isExpanded: Bool`; add a small chevron or click-to-expand affordance when `snippet.value.contains("\n")`
+- `Sources/ContentView.swift` — ensure the `ScrollViewReader` proxy scrolls the expanded row into view when toggled
+
+---
+
 ## 13. Surface save errors instead of swallowing them silently
 
 **Rationale:** `SnippetStore.save()` catches all errors with an empty `catch {}` block, meaning a disk-full condition, a permissions error on `snippets.json`, or an encoding failure will cause data loss with no feedback to the user. Because Snippy has no test target either, this path is never exercised. The fix is two-pronged: log the error at minimum, and post a brief `NSUserNotification`-style alert (or update a `@Published var lastSaveError: Error?` that `ContentView` watches) so users are not left wondering why new snippets disappear after a restart.
