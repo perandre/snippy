@@ -4,6 +4,13 @@ All notable user-facing changes to Snippy are documented here.
 
 ## [Unreleased]
 
+### Added
+- App icon — Snippy now shows a proper icon in the menu bar, Dock (when visible), and Finder.
+
+### Changed
+- `⌘Q` shortcut removed to prevent accidental quits while typing; quit via right-click on the menu bar icon instead.
+- Snippets with the same use count now sort by most recently used, so freshly added snippets appear in a more predictable position.
+
 ## [1.0.1] — 2026-03-26
 
 ### Changed
