@@ -188,3 +188,39 @@ Improvement ideas surfaced during code review. Capped at 3 per night; ordered by
 **Involved files:**
 - `Sources/SnippyApp.swift` — after posting `snippyDidShow`, call `panel.makeFirstResponder(panel.contentView)` (or the specific hosting view) to push focus into the SwiftUI tree
 - `Sources/ContentView.swift` — if a programmatic approach is insufficient, install a one-shot `NSEvent` monitor on `snippyDidShow` that synthesises a Tab key event to cycle focus into the search field
+
+---
+
+## 16. Duplicate snippet action
+
+**Why:** When a user wants to create a variation of an existing snippet (e.g., a slightly different email signature or a modified code template), they must manually create a new snippet and retype or paste the content. A "Duplicate" option in the context menu (right-click) would copy the snippet's title and value into a new entry, letting the user then edit only the parts that differ. This is a common pattern in productivity tools and would save time for users who maintain families of similar snippets.
+
+**Effort:** S
+
+**Files involved:**
+- `Sources/SnippetRow.swift` — add a "Duplicate" item to the existing `.contextMenu` block
+- `Sources/SnippetStore.swift` — add a `duplicate(_:)` method that creates a new `Snippet` with the same title/value (and copies the image file for image snippets) but a fresh UUID and zero use count
+- `Sources/ContentView.swift` — wire the duplicate action through to `SnippetRow` alongside `onCopy`, `onEdit`, `onDelete`
+
+---
+
+## 17. Truncated snippet preview with full-text tooltip
+
+**Why:** Long text snippets are hard-truncated at one line (`lineLimit(1)` in `SnippetRow`), so a user storing multi-line content like addresses, code blocks, or email templates cannot tell which snippet is which without copying each one. Adding a tooltip that shows the full text on hover (using SwiftUI's `.help()` modifier or an `NSPopover` triggered by a long hover) would let users preview content without copying it to the clipboard. This is especially valuable when several snippets share the same label but differ in body text.
+
+**Effort:** S
+
+**Files involved:**
+- `Sources/SnippetRow.swift` — add `.help(snippet.value)` on the value `Text` view, or implement a custom hover popover that shows the full untruncated text after a 0.5-second delay
+
+---
+
+## 18. Keyboard shortcut to delete the selected snippet
+
+**Why:** Deleting a snippet currently requires hovering with the mouse to reveal the trash icon, or right-clicking to open the context menu. Users navigating entirely by keyboard (↑/↓ to select, Enter to copy) have no keyboard path to delete. Adding `⌘⌫` (Command + Delete) as a delete shortcut in the existing `NSEvent` key monitor in `ContentView` would complete the keyboard-only workflow. Since deletion is irreversible, showing a brief "Deleted" flash (reusing the green-flash pattern but in red/orange) would give visual confirmation without adding a modal dialog.
+
+**Effort:** S
+
+**Files involved:**
+- `Sources/ContentView.swift` — add a `case 51 where cmd:` branch (keyCode 51 = Delete/Backspace) in `installKeyMonitor()` that calls `store.delete()` on the currently selected snippet and shows a brief confirmation flash
+- `Sources/SnippetRow.swift` — optionally add a red/orange flash state analogous to the green `isCopied` flash for visual delete confirmation
