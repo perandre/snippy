@@ -188,3 +188,38 @@ Improvement ideas surfaced during code review. Capped at 3 per night; ordered by
 **Involved files:**
 - `Sources/SnippyApp.swift` — after posting `snippyDidShow`, call `panel.makeFirstResponder(panel.contentView)` (or the specific hosting view) to push focus into the SwiftUI tree
 - `Sources/ContentView.swift` — if a programmatic approach is insufficient, install a one-shot `NSEvent` monitor on `snippyDidShow` that synthesises a Tab key event to cycle focus into the search field
+
+---
+
+## 16. Multi-line snippet preview with expand/collapse
+
+**Why:** `SnippetRow` renders every text snippet with `lineLimit(1)`, so anything longer than one line — a postal address, a code block, an email template — is truncated with an ellipsis. The user cannot see the full content without copying it to the clipboard and pasting elsewhere, or editing the snippet. Adding an expand/collapse toggle (e.g., a small disclosure chevron, or an Option-click to expand) would let users preview multi-line snippets in place. This is especially useful for confirming the right snippet before pasting into a document.
+
+**Effort:** S
+
+**Files involved:**
+- `Sources/SnippetRow.swift` — replace the fixed `lineLimit(1)` on the value `Text` with a conditional limit controlled by an `@State var isExpanded: Bool`; add a disclosure indicator when the value contains a newline
+- `Sources/ContentView.swift` — optionally wire Option+Return or Option+click to toggle expansion on the selected row
+
+---
+
+## 17. Keyboard shortcut to delete the selected snippet
+
+**Why:** Deleting a snippet currently requires either hovering and clicking the small trash icon, or right-clicking and choosing "Delete" from the context menu. Neither is reachable from the keyboard alone. Users who are pruning their snippet library (e.g., removing outdated entries in a row) must switch between keyboard and mouse for every deletion. Adding `⌘Delete` (or `⌘Backspace`, keyCode 51 with command modifier) to the existing `NSEvent` key monitor in `ContentView` would complete the keyboard-only workflow alongside `⌘N` (add) and the pencil-edit flow.
+
+**Effort:** S
+
+**Files involved:**
+- `Sources/ContentView.swift` — add a `case 51 where cmd:` branch to the key monitor's switch statement that calls `store.delete(snippet)` on the currently selected snippet and advances the selection to the next row
+
+---
+
+## 18. Truncate long values in the search results with a match-context window
+
+**Why:** When the search bar filters snippets, the matching substring may be in the middle or end of a long value. Because `SnippetRow` always shows the value from the start with `lineLimit(1)`, the matched portion may be off-screen and invisible — the user sees a truncated prefix that does not obviously relate to their query. Shifting the visible window to centre on the first match occurrence (similar to how text editors highlight search hits) would make search results immediately understandable, especially for users with many similarly-prefixed snippets.
+
+**Effort:** M
+
+**Files involved:**
+- `Sources/SnippetRow.swift` — accept an optional `highlightRange: Range<String.Index>?` parameter; when set, render the value `Text` starting from a position that keeps the match visible, and apply a highlight colour to the matched substring
+- `Sources/ContentView.swift` — compute the match range when `searchText` is non-empty and pass it through to `SnippetRow`
