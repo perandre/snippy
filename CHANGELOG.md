@@ -4,6 +4,18 @@ All notable user-facing changes to Snippy are documented here.
 
 ## [Unreleased]
 
+## [1.1] — 2026-04-24
+
+### Added
+- App icon — Snippy now displays a proper application icon in the Finder, Dock (on drag), and About dialog instead of a generic blank.
+
+### Changed
+- Removed the in-app `⌘Q` keyboard shortcut to prevent accidental quits while typing. Quit Snippy via right-click on the menu bar icon instead.
+
+### Fixed
+- Image-heavy snippet lists no longer cause jank when scrolling — decoded images are now cached in memory after the first load.
+- The click-outside-to-dismiss listener now only runs while the panel is visible, eliminating unnecessary background event processing.
+
 ## [1.0.1] — 2026-03-26
 
 ### Changed
