@@ -4,6 +4,9 @@ All notable user-facing changes to Snippy are documented here.
 
 ## [Unreleased]
 
+### Changed
+- `⌘Q` no longer quits the app from the snippet panel — prevents accidental exits while typing. Quit via the right-click menu on the menu bar icon instead.
+
 ## [1.0.1] — 2026-03-26
 
 ### Changed
